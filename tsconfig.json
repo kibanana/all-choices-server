@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es6",
+		"outDir": "out",
+		"lib": [
+      "dom",
+      "es2017",
+      "scripthost",
+      "es2015.promise"
+    ],
+    "moduleResolution": "node",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+		"strict": true
+	}
+}
