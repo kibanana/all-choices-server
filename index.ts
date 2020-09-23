@@ -21,25 +21,28 @@ const names: any = {};
 io.on('connection', (socket: any) => {
   console.log(`${socket.id} Connected`);
 
-  if (names[socket.id]) {
+  if (!names[socket.id]) {
     let name = `user${++cnt}`;
     names[socket.id] = name;
-    io.to(socket.id).emit('receive-name', { name: names[socket.id] || 'unknown', cnt });
+    
+    io.emit('receive-msg', { message: `${cnt}번째 사람이 입장했습니다! (대화명: ${name})` });
+    io.to(socket.id).emit('receive-name', { name: names[socket.id], cnt });
   }
-
+  
   socket.on('update-name', (params: name = { name: '' }) => {
     const { name } = params;
     const temp = names[socket.id];
     names[socket.id] = name;
-    io.emit('receive-msg', `제 이름이 '${temp}' => '${name}'(으)로 바뀌었습니다!`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log(`${socket.id} Disconnected`);
+    io.emit('receive-msg', { message: `대화명이 '${temp}'에서 '${name}'(으)로 바뀌었습니다!` });
   });
 
   socket.on('send-msg', (params: message = { name: '', message: '' }) => {
     io.emit('receive-msg', params);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`${socket.id} Disconnected`);
+    delete names[socket.id];
   });
 });
 
