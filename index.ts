@@ -17,9 +17,12 @@ interface message {
 
 let cnt = - 1;
 const names: any = {};
+const rooms: any = {};
   
 io.on('connection', (socket: any) => {
   console.log(`${socket.id} Connected`);
+
+  socket.emit('connected');
 
   if (!names[socket.id]) {
     let name = `user${++cnt}`;
@@ -38,6 +41,32 @@ io.on('connection', (socket: any) => {
 
   socket.on('send-msg', (params: message = { name: '', message: '' }) => {
     io.emit('receive-msg', params);
+  });
+
+  // Random chat room
+  socket.on('req-join-room', () => {
+    const keys = Object.keys(rooms);
+    for (let i = 0; i < keys.length; i++) {
+      if (keys[i] != rooms[keys[i]]) continue; // socket의 id가 room id가 아닐 때
+      else { // socket의 id가 room id일 때
+        socket.join(keys[i]);
+        io.sockets.in(keys[i]).emit('req-join-room-accepted', {});
+        const createKey = keys[i];
+        rooms[socket.id] = createKey; // room 호스트, room 게스트 별로 다른 key 사용
+        return;
+      }
+    }
+    // 빈 방이 없을 때
+    socket.join(socket.id);
+    rooms[socket.id] = socket.id;
+  });
+
+  socket.on('req-join-room-canceled', () => {
+    socket.leave(rooms[socket.id]);
+  });
+
+  socket.on('send-msg-in-room', (params: message = { name: '', message: '' }) => {
+    io.sockets.in(rooms[socket.io]).emit('receive-msg-in-room', params);
   });
 
   socket.on('disconnect', () => {
