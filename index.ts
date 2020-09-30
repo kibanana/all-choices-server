@@ -7,7 +7,7 @@ const http = createServer(app);
 const io = socket(http);
 
 interface name {
-	name: string
+  name: string
 }
 
 interface message {
@@ -71,7 +71,12 @@ io.on('connection', (socket: any) => {
 
   socket.on('disconnect', () => {
     console.log(`${socket.id} Disconnected`);
+    const key = rooms[socket.id];
+    socket.leave(key);
+    io.emit('disconnected');
+    io.sockets.in(key).emit('disconnected');
     delete names[socket.id];
+    delete rooms[key];
   });
 });
 
