@@ -16,71 +16,71 @@ interface message {
 }
 
 let cnt = - 1;
-const names: any = {};
-const rooms: any = {};
+const nameObj: any = {};
+const roomObj: any = {};
   
 io.on('connection', (socket: any) => {
   console.log(`${socket.id} Connected`);
 
   socket.emit('connected');
 
-  if (!names[socket.id]) {
+  if (!nameObj[socket.id]) {
     let name = `user${++cnt}`;
-    names[socket.id] = name;
+    nameObj[socket.id] = name;
     
     io.emit('receive-msg', { message: `${cnt}번째 사람이 입장했습니다! (대화명: ${name})` });
-    io.to(socket.id).emit('receive-name', { name: names[socket.id], cnt });
+    io.to(socket.id).emit('receive-name', { name: nameObj[socket.id], cnt });
   }
   
   socket.on('update-name', (params: name = { name: '' }) => {
     const { name } = params;
-    const temp = names[socket.id];
-    names[socket.id] = name;
+    const temp = nameObj[socket.id];
+    nameObj[socket.id] = name;
     io.emit('receive-msg', { message: `대화명이 '${temp}'에서 '${name}'(으)로 바뀌었습니다!` });
   });
 
   socket.on('send-msg', (params: message = { message: '' }) => {
-    params['name'] = names[socket.io];
-    io.emit('receive-msg', params);
+    const res = { ...params, name: nameObj[socket.id] };
+    io.emit('receive-msg', res);
   });
 
   // Random chat room
   socket.on('req-join-room', () => {
-    const keys = Object.keys(rooms);
+    const keys = Object.keys(roomObj);
     for (let i = 0; i < keys.length; i++) {
-      if (keys[i] != rooms[keys[i]]) continue; // socket의 id가 room id가 아닐 때
+      if (keys[i] != roomObj[keys[i]]) continue; // socket의 id가 room id가 아닐 때
       else { // socket의 id가 room id일 때
         socket.join(keys[i]);
         io.sockets.in(keys[i]).emit('req-join-room-accepted', {});
         const createKey = keys[i];
-        rooms[socket.id] = createKey; // room 호스트, room 게스트 별로 다른 key 사용
-        io.sockets.in(rooms[socket.io]).emit('receive-msg', { message: `랜덤 채팅방을 입장했습니다! (대화명: ${names[socket.io]})` });
+        roomObj[socket.id] = createKey; // room 호스트, room 게스트 별로 다른 key 사용
+        io.sockets.in(roomObj[socket.io]).emit('receive-msg', { message: `랜덤 채팅방을 입장했습니다! (대화명: ${nameObj[socket.io]})` });
         return;
       }
     }
     // 빈 방이 없을 때
     socket.join(socket.id);
-    rooms[socket.id] = socket.id;
-    io.sockets.in(rooms[socket.io]).emit('receive-msg', { message: `랜덤 채팅방을 생성했습니다! (대화명: ${names[socket.io]})` });
+    roomObj[socket.id] = socket.id;
+    io.sockets.in(roomObj[socket.io]).emit('receive-msg', { message: `랜덤 채팅방을 생성했습니다! (대화명: ${nameObj[socket.io]})` });
   });
 
   socket.on('req-join-room-canceled', () => {
-    socket.leave(rooms[socket.id]);
+    socket.leave(roomObj[socket.id]);
   });
 
   socket.on('send-msg-in-room', (params: message = { message: '' }) => {
-    params['name'] = names[socket.io];
-    io.sockets.in(rooms[socket.io]).emit('receive-msg', params);
+    const res = { ...params, name: nameObj[socket.id] };
+    io.sockets.in(roomObj[socket.io]).emit('receive-msg', res);
   });
 
   socket.on('disconnect', () => {
     console.log(`${socket.id} Disconnected`);
-    const key = rooms[socket.id];
+    const key = roomObj[socket.id];
     socket.leave(key);
     io.emit('disconnected');
     io.sockets.in(key).emit('disconnected');
-    delete names[socket.id];
-    delete rooms[key];
+    delete nameObj[socket.id];
+    delete roomObj[key];
   });
 });
 
