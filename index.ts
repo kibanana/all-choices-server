@@ -11,7 +11,7 @@ interface name {
 }
 
 interface message {
-  name: string
+  name?: string
   message: string
 }
 
@@ -39,7 +39,8 @@ io.on('connection', (socket: any) => {
     io.emit('receive-msg', { message: `대화명이 '${temp}'에서 '${name}'(으)로 바뀌었습니다!` });
   });
 
-  socket.on('send-msg', (params: message = { name: '', message: '' }) => {
+  socket.on('send-msg', (params: message = { message: '' }) => {
+    params['name'] = names[socket.io];
     io.emit('receive-msg', params);
   });
 
@@ -53,20 +54,23 @@ io.on('connection', (socket: any) => {
         io.sockets.in(keys[i]).emit('req-join-room-accepted', {});
         const createKey = keys[i];
         rooms[socket.id] = createKey; // room 호스트, room 게스트 별로 다른 key 사용
+        io.sockets.in(rooms[socket.io]).emit('receive-msg', { message: `랜덤 채팅방을 입장했습니다! (대화명: ${names[socket.io]})` });
         return;
       }
     }
     // 빈 방이 없을 때
     socket.join(socket.id);
     rooms[socket.id] = socket.id;
+    io.sockets.in(rooms[socket.io]).emit('receive-msg', { message: `랜덤 채팅방을 생성했습니다! (대화명: ${names[socket.io]})` });
   });
 
   socket.on('req-join-room-canceled', () => {
     socket.leave(rooms[socket.id]);
   });
 
-  socket.on('send-msg-in-room', (params: message = { name: '', message: '' }) => {
-    io.sockets.in(rooms[socket.io]).emit('receive-msg-in-room', params);
+  socket.on('send-msg-in-room', (params: message = { message: '' }) => {
+    params['name'] = names[socket.io];
+    io.sockets.in(rooms[socket.io]).emit('receive-msg', params);
   });
 
   socket.on('disconnect', () => {
