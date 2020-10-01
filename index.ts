@@ -29,7 +29,7 @@ io.on('connection', (socket: any) => {
     nameObj[socket.id] = name;
     
     io.emit('receive-msg', { message: `${cnt}번째 사람이 입장했습니다! (대화명: ${name})` });
-    io.to(socket.id).emit('receive-name', { name: nameObj[socket.id], cnt });
+    socket.emit('receive-name', { name: nameObj[socket.id], cnt });
   }
   
   socket.on('update-name', (params: name = { name: '' }) => {
@@ -51,17 +51,18 @@ io.on('connection', (socket: any) => {
       if (keys[i] != roomObj[keys[i]]) continue; // socket의 id가 room id가 아닐 때
       else { // socket의 id가 room id일 때
         socket.join(keys[i]);
-        io.sockets.in(keys[i]).emit('req-join-room-accepted', {});
         const createKey = keys[i];
         roomObj[socket.id] = createKey; // room 호스트, room 게스트 별로 다른 key 사용
-        io.sockets.in(roomObj[socket.io]).emit('receive-msg', { message: `랜덤 채팅방을 입장했습니다! (대화명: ${nameObj[socket.io]})` });
+        socket.emit('req-join-room-accepted', {});
+        io.in(roomObj[socket.id]).emit('receive-msg', { message: `랜덤 채팅방에 입장했습니다! (대화명: ${nameObj[socket.id]})` });
         return;
       }
     }
     // 빈 방이 없을 때
     socket.join(socket.id);
     roomObj[socket.id] = socket.id;
-    io.sockets.in(roomObj[socket.io]).emit('receive-msg', { message: `랜덤 채팅방을 생성했습니다! (대화명: ${nameObj[socket.io]})` });
+    socket.emit('req-join-room-accepted', {});
+    io.in(roomObj[socket.id]).emit('receive-msg', { message: `랜덤 채팅방을 생성했습니다! (대화명: ${nameObj[socket.id]})` });
   });
 
   socket.on('req-join-room-canceled', () => {
@@ -70,7 +71,7 @@ io.on('connection', (socket: any) => {
 
   socket.on('send-msg-in-room', (params: message = { message: '' }) => {
     const res = { ...params, name: nameObj[socket.id] };
-    io.sockets.in(roomObj[socket.io]).emit('receive-msg', res);
+    io.in(roomObj[socket.id]).emit('receive-msg', res);
   });
 
   socket.on('disconnect', () => {
@@ -78,7 +79,7 @@ io.on('connection', (socket: any) => {
     const key = roomObj[socket.id];
     socket.leave(key);
     io.emit('disconnected');
-    io.sockets.in(key).emit('disconnected');
+    socket.to(key).emit('disconnected');
     delete nameObj[socket.id];
     delete roomObj[key];
   });
