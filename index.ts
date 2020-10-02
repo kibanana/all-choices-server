@@ -46,15 +46,21 @@ io.on('connection', (socket: any) => {
 
   // Random chat room
   socket.on('req-join-room', () => {
+    console.log(roomObj);
+    console.log(socket.rooms);
     const keys = Object.keys(roomObj);
+    const values = Object.values(roomObj);
     for (let i = 0; i < keys.length; i++) {
       if (keys[i] != roomObj[keys[i]]) continue; // socket의 id가 room id가 아닐 때
       else { // socket의 id가 room id일 때
+        if (values.filter(elem => elem === roomObj[keys[i]]).length >= 2) continue;
         socket.join(keys[i]);
         const createKey = keys[i];
         roomObj[socket.id] = createKey; // room 호스트, room 게스트 별로 다른 key 사용
         socket.emit('req-join-room-accepted', {});
         io.in(roomObj[socket.id]).emit('receive-msg', { message: `랜덤 채팅방에 입장했습니다! (대화명: ${nameObj[socket.id]})` });
+        console.log(roomObj);
+        console.log(socket.rooms);
         return;
       }
     }
@@ -63,6 +69,8 @@ io.on('connection', (socket: any) => {
     roomObj[socket.id] = socket.id;
     socket.emit('req-join-room-accepted', {});
     io.in(roomObj[socket.id]).emit('receive-msg', { message: `랜덤 채팅방을 생성했습니다! (대화명: ${nameObj[socket.id]})` });
+    console.log(roomObj);
+    console.log(socket.rooms);
   });
 
   socket.on('req-join-room-canceled', () => {
