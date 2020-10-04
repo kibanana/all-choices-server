@@ -1,10 +1,14 @@
 import express from 'express';
 import { createServer } from 'http';
 import socket from 'socket.io';
+import redis from 'socket.io-redis';
 
 const app = express();
 const http = createServer(app);
 const io = socket(http);
+
+const redisAdapter = redis({ host: '127.0.0.1', port: 6379 });
+io.adapter(redisAdapter);
 
 interface name {
   name: string
@@ -93,6 +97,6 @@ io.on('connection', (socket: any) => {
   });
 });
 
-http.listen(3000, () => {
+http.listen(3001, () => {
   console.log('Server is running!');
 });
