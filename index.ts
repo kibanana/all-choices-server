@@ -1,12 +1,9 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import { createServer } from 'http';
 import socket from 'socket.io';
 import redis from 'socket.io-redis';
 
 const app = express();
-app.use((__req: Request, __res: Response, next: NextFunction) => {
-  next();
-});
 const http = createServer(app);
 const io = socket(http);
 
@@ -25,7 +22,7 @@ interface message {
 let cnt = - 1;
 const nameObj: any = {};
 const roomObj: any = {};
-  
+
 io.on('connection', (socket: any) => {
   console.log(`${socket.id} Connected`);
 

@@ -6,8 +6,7 @@
   "scripts": {
     "start": "pm2 start ./processes.config.json",
     "stop": "pm2 kill",
-    "start:pm2": "pm2 start index.ts --watch",
-    "log": "DEBUG=socket.io* ts-node index.ts",
+    "start:debug": "DEBUG=socket.io* ts-node index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

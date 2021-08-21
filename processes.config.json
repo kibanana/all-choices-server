@@ -2,6 +2,8 @@
     "apps": [{
         "name": "all-choices",
         "script": "ts-node ./index.ts",
-        "watch": true
+        "watch": true,
+        "exec_mode": "cluster",
+        "instances": "max"
     }]
 }
